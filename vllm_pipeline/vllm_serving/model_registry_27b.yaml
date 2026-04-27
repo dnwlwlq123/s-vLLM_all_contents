@@ -1,0 +1,23 @@
+# Qwen3.5-27B FP8 바닐라 서빙용 registry
+# 9B 대비 응답 퀄리티/속도 비교를 위한 설정 — adapter 없이 base 모델만 서빙
+#
+# 사용법:
+#   VS_REGISTRY_PATH=model_registry_27b.yaml python run.py
+#
+# GPU 요구사항:
+#   - 27B FP8 ≈ 27GB VRAM (모델 가중치)
+#   - L40S 48GB 단독 사용 시 gpu-memory-utilization 0.85 → 약 40GB 확보 → 충분
+#   - L40S 50% 공유(24GB)로는 부족 — 100% 할당 필요
+
+base_model:
+  name: "Qwen3.5-27B"
+  s3_path: "models/Qwen3.5-27B/"
+  local_path: "Qwen3.5-27B"
+
+adapters:
+  intent:
+    s3_path: "adapters/intent_27b/"
+    local_path: "adapters/intent_27b"
+  answer:
+    s3_path: "adapters/answer_27b/"
+    local_path: "adapters/answer_27b"

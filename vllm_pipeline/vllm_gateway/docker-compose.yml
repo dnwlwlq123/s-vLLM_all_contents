@@ -1,0 +1,24 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sllm-gateway
+    network_mode: host
+    environment:
+      - GW_HOST=0.0.0.0
+      - GW_PORT=17801
+      - GW_INTENT_VLLM_URL=http://localhost:8000
+      - GW_ANSWER_VLLM_URL=http://localhost:8000
+      - GW_INTENT_SERVING_URL=http://127.0.0.1:6300
+      - GW_ANSWER_SERVING_URL=http://127.0.0.1:6300
+      - GW_BASE_MODEL_NAME=Qwen3.5-27B
+      - GW_INTENT_MODEL_NAME=intent
+      - GW_ANSWER_MODEL_NAME=answer
+      - GW_INTENT_MAX_TOKENS=128
+      - GW_INTENT_TEMPERATURE=0.0
+      - GW_ANSWER_MAX_TOKENS=512
+      - GW_ANSWER_TEMPERATURE=0.3
+      - GW_HTTP_TIMEOUT=60.0
+      - GW_LOG_LEVEL=INFO
+    restart: unless-stopped

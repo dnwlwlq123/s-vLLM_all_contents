@@ -1,0 +1,7 @@
+vllm
+fastapi
+uvicorn
+httpx[http2]
+loguru
+pydantic-settings
+huggingface_hub

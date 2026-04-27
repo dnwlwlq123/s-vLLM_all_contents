@@ -1,0 +1,16 @@
+#!/bin/bash
+# Gateway 시작 스크립트
+# 사용법: bash start_gateway.sh [모델명] [포트]
+# 예시: bash start_gateway.sh Qwen3.5-27B 443
+
+MODEL_NAME="${1:-Qwen3.5-27B}"
+PORT="${2:-9720}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "=== Gateway 시작 (모델: $MODEL_NAME, 포트: $PORT) ==="
+cd $SCRIPT_DIR && \
+GW_ANSWER_VLLM_URL=http://localhost:8000 \
+GW_INTENT_VLLM_URL=http://localhost:8000 \
+GW_BASE_MODEL_NAME=$MODEL_NAME \
+GW_PORT=$PORT \
+python3 main.py
