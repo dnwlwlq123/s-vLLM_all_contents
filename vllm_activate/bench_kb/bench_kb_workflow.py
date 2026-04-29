@@ -78,25 +78,47 @@ QUERIES = [
 
 
 def build_prompt(tok, target_tokens: int, channel_id: int, turn: int, step_idx: int) -> str:
-    """채널/턴/스텝별 다른 RAG 청크 조합 + 다양한 query."""
-    rng = random.Random(channel_id * 10000 + turn * 100 + step_idx)
-    parts = []
+    """워크플로우 누적 모델 — 한 턴 내 step1 prompt ⊂ step2 prompt ⊂ step3 prompt (prefix 공유).
+    같은 (ch, turn)면 base 텍스트 동일 → 슬라이스 길이만 step마다 다름 → prefix cache hit.
+    """
+    # seed에서 step_idx 제거 — 같은 (ch, turn) 내 step간 prefix 공유
+    rng = random.Random(channel_id * 10000 + turn * 100)
     pool = RAG_CHUNKS[:]
     rng.shuffle(pool)
-    idx = 0
-    while True:
-        parts.append(pool[idx % len(pool)])
-        idx += 1
-        if len(tok.encode("\n".join(parts))) >= target_tokens - 30:
-            break
-    text = "\n".join(parts)
-    enc = tok.encode(text)
-    if len(enc) > target_tokens - 30:
-        enc = enc[:target_tokens - 30]
+    # 가장 큰 step (4403)을 항상 커버할 만큼 한 번에 생성
+    MAX_TGT = 4500
+    repeats = max(2, MAX_TGT // 100 + 5)
+    text = "\n".join(pool * repeats)
+    enc = tok.encode(text)  # encode 1회
+    cut = target_tokens - 30
+    if len(enc) > cut:
+        enc = enc[:cut]
         text = tok.decode(enc)
+    # 쿼리는 step마다 다름 (실제 워크플로우도 step별 user 메시지 다름)
     q = QUERIES[(channel_id * 7 + turn * 3 + step_idx) % len(QUERIES)]
     text += f"\n\n[고객 #{channel_id} turn {turn}] {q}"
     return text
+
+
+def prebuild_prompts(tok, channels: int, max_turns: int = 60, n_workers: int = 8) -> dict:
+    """모든 (ch, turn, step) prompt 사전 생성. ThreadPoolExecutor 병렬 (HF Rust tokenizer GIL release)."""
+    from concurrent.futures import ThreadPoolExecutor
+    tasks = []
+    for ch in range(channels):
+        for t in range(max_turns):
+            for i, step in enumerate(STEPS):
+                tasks.append((ch, t, i, step["in_tokens"]))
+    out: dict = {}
+    def _one(arg):
+        ch, t, i, tgt = arg
+        return (ch, t, i), build_prompt(tok, tgt, ch, t, i)
+    t0 = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        for key, p in ex.map(_one, tasks, chunksize=16):
+            out[key] = p
+    dt = time.perf_counter() - t0
+    print(f"[prebuild] {len(out)} prompts in {dt:.1f}s ({len(out)/dt:.0f}/s) — channels={channels} max_turns={max_turns}", flush=True)
+    return out
 
 
 # 한 호출당 timeout — 한 호출 hang 시 sustained loop 안 멈추게
@@ -159,21 +181,23 @@ async def call_llm(session, url, model, prompt, max_tokens, ch_id, turn, step_na
     }
 
 
-async def run_turn(session, url, model, tok, ch_id, turn, mode):
-    """1 턴 = step1→step2→step3 (sequential) 또는 3 동시 (parallel)."""
+async def run_turn(session, url, model, tok, prompts_for_ch, ch_id, turn, mode):
+    """1 턴 = step1→step2→step3 (sequential) 또는 3 동시 (parallel). prompts dict 사용 (fallback: build)."""
+    def _get(i, step):
+        p = prompts_for_ch.get((turn, i)) if prompts_for_ch else None
+        return p if p is not None else build_prompt(tok, step["in_tokens"], ch_id, turn, i)
     turn_t0 = time.perf_counter()
     if mode == "sequential":
         results = []
         for i, step in enumerate(STEPS):
-            prompt = build_prompt(tok, step["in_tokens"], ch_id, turn, i)
+            prompt = _get(i, step)
             r = await call_llm(session, url, model, prompt, step["out_tokens"], ch_id, turn, step["name"])
             results.append(r)
             if "error" in r:
                 break
     else:  # parallel
         tasks = [
-            call_llm(session, url, model,
-                     build_prompt(tok, step["in_tokens"], ch_id, turn, i),
+            call_llm(session, url, model, _get(i, step),
                      step["out_tokens"], ch_id, turn, step["name"])
             for i, step in enumerate(STEPS)
         ]
@@ -182,7 +206,7 @@ async def run_turn(session, url, model, tok, ch_id, turn, mode):
     return {"turn": turn, "turn_total_ms": turn_total_ms, "steps": results}
 
 
-async def channel_loop(session, url, model, tok, ch_id, t_start, duration_s, gap_min, gap_max, mode, warmup_turns):
+async def channel_loop(session, url, model, tok, prompts_for_ch, ch_id, t_start, duration_s, gap_min, gap_max, mode, warmup_turns):
     """채널 1개 sustained loop. 매 턴 사이 gap = U(gap_min, gap_max) random."""
     await asyncio.sleep(t_start)
     ch_real_start = time.perf_counter()
@@ -191,7 +215,7 @@ async def channel_loop(session, url, model, tok, ch_id, t_start, duration_s, gap
     turns = []
     t_idx = 0
     while time.perf_counter() < end_at:
-        r = await run_turn(session, url, model, tok, ch_id, t_idx, mode)
+        r = await run_turn(session, url, model, tok, prompts_for_ch, ch_id, t_idx, mode)
         r["is_warmup"] = (t_idx < warmup_turns)
         gap_used = rng.uniform(gap_min, gap_max) if gap_max > gap_min else gap_min
         r["next_gap_s"] = gap_used
@@ -337,13 +361,22 @@ async def main():
           f"rate={args.rate:.2f}/s dur={args.duration}s gap=U({args.gap_min},{args.gap_max})s warmup={args.warmup_turns}")
     print(f"[setup] arrival span: {min(arrivals):.1f}s ~ {max(arrivals):.1f}s")
 
+    # 사전 prompt 생성 — turn 루프에서 build_prompt GIL 경합 제거
+    # 채널당 cycle: turn(~1.7s) + gap(1~5s) >= 2.7s, duration 120s → 최대 ~45 turns. 60으로 여유.
+    max_turns_prebuild = int(args.duration / max(args.gap_min + 1.0, 1.5)) + 10
+    prebuilt = prebuild_prompts(tok, args.channels, max_turns=max_turns_prebuild, n_workers=8)
+    # ch -> {(turn, step): prompt}
+    prompts_by_ch = {ch: {} for ch in range(args.channels)}
+    for (ch, t, i), p in prebuilt.items():
+        prompts_by_ch[ch][(t, i)] = p
+
     conn = aiohttp.TCPConnector(limit=0, limit_per_host=0, keepalive_timeout=600)
 
     async with aiohttp.ClientSession(connector=conn) as s:
         t0 = time.perf_counter()
         tasks = [
             asyncio.create_task(channel_loop(
-                s, args.url, args.model, tok, i, arrivals[i],
+                s, args.url, args.model, tok, prompts_by_ch[i], i, arrivals[i],
                 args.duration, args.gap_min, args.gap_max, args.mode, args.warmup_turns
             ))
             for i in range(args.channels)
