@@ -129,9 +129,12 @@ async def call_llm(session, url, model, prompt, max_tokens, ch_id, turn, step_na
                 if s.startswith("data: ") and "[DONE]" not in s:
                     try:
                         j = json.loads(s[6:])
-                        delta = j.get("choices", [{}])[0].get("delta", {})
-                        d = delta.get("content", "") or delta.get("reasoning", "")
-                        if d: chunks += 1
+                        # choices와 usage는 별도 chunk에 올 수 있으므로 분리 처리
+                        choices = j.get("choices") or []
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            d = delta.get("content", "") or delta.get("reasoning", "")
+                            if d: chunks += 1
                         u = j.get("usage")
                         if u:
                             pt = u.get("prompt_tokens", 0)
@@ -179,20 +182,23 @@ async def run_turn(session, url, model, tok, ch_id, turn, mode):
     return {"turn": turn, "turn_total_ms": turn_total_ms, "steps": results}
 
 
-async def channel_loop(session, url, model, tok, ch_id, t_start, duration_s, gap_s, mode, warmup_turns):
-    """채널 1개 sustained loop."""
+async def channel_loop(session, url, model, tok, ch_id, t_start, duration_s, gap_min, gap_max, mode, warmup_turns):
+    """채널 1개 sustained loop. 매 턴 사이 gap = U(gap_min, gap_max) random."""
     await asyncio.sleep(t_start)
     ch_real_start = time.perf_counter()
     end_at = ch_real_start + duration_s
+    rng = random.Random(ch_id * 99991 + 13)
     turns = []
     t_idx = 0
     while time.perf_counter() < end_at:
         r = await run_turn(session, url, model, tok, ch_id, t_idx, mode)
         r["is_warmup"] = (t_idx < warmup_turns)
+        gap_used = rng.uniform(gap_min, gap_max) if gap_max > gap_min else gap_min
+        r["next_gap_s"] = gap_used
         turns.append(r)
         t_idx += 1
         if time.perf_counter() < end_at:
-            await asyncio.sleep(gap_s)
+            await asyncio.sleep(gap_used)
     return {
         "ch": ch_id, "t_start": t_start,
         "real_start_s": ch_real_start, "real_end_s": time.perf_counter(),
@@ -291,11 +297,14 @@ def summarize(channel_results, mode, pattern, channels, rate, duration_s, warmup
     total_out = sum(r["completion_tok"] for r in all_steps_ok)
     total_in  = sum(r["prompt_tok"]    for r in all_steps_ok)
     tps_out = total_out / effective_wall_s if effective_wall_s > 0 else 0
+    tps_in  = total_in  / effective_wall_s if effective_wall_s > 0 else 0
     summary["throughput"] = {
         "input_tokens": total_in, "output_tokens": total_out,
-        "tps_out": tps_out, "calls_per_s": total_calls / effective_wall_s if effective_wall_s else 0,
+        "tps_in": tps_in, "tps_out": tps_out,
+        "calls_per_s": total_calls / effective_wall_s if effective_wall_s else 0,
+        "effective_wall_s": effective_wall_s,
     }
-    print(f"  [throughput] in={total_in}tok  out={total_out}tok  TPS_out={tps_out:.1f}tok/s  "
+    print(f"  [throughput] in={total_in}tok  out={total_out}tok  TPS_in={tps_in:.0f}tok/s  TPS_out={tps_out:.1f}tok/s  "
           f"calls/s={total_calls/effective_wall_s if effective_wall_s else 0:.2f}")
     return summary
 
@@ -308,7 +317,8 @@ async def main():
     p.add_argument("--rate", type=float, default=None,
                    help="채널 도착률 req/s. 미지정 시 channels/5초 (5초 안 모든 채널 진입)")
     p.add_argument("--duration", type=float, default=120.0, help="채널당 sustained 측정 시간(초)")
-    p.add_argument("--gap", type=float, default=4.0, help="턴 사이 갭(초)")
+    p.add_argument("--gap-min", type=float, default=1.0, help="턴 사이 갭 최소(초)")
+    p.add_argument("--gap-max", type=float, default=5.0, help="턴 사이 갭 최대(초). min=max면 fixed")
     p.add_argument("--warmup-turns", type=int, default=2)
     p.add_argument("--url", default="http://localhost:8888/v1/chat/completions")
     p.add_argument("--model", default="gemma-4-31B-it")
@@ -324,7 +334,7 @@ async def main():
 
     arrivals = gen_arrivals(args.channels, args.pattern, args.rate)
     print(f"[setup] mode={args.mode} pattern={args.pattern} channels={args.channels} "
-          f"rate={args.rate:.2f}/s dur={args.duration}s gap={args.gap}s warmup={args.warmup_turns}")
+          f"rate={args.rate:.2f}/s dur={args.duration}s gap=U({args.gap_min},{args.gap_max})s warmup={args.warmup_turns}")
     print(f"[setup] arrival span: {min(arrivals):.1f}s ~ {max(arrivals):.1f}s")
 
     conn = aiohttp.TCPConnector(limit=0, limit_per_host=0, keepalive_timeout=600)
@@ -334,7 +344,7 @@ async def main():
         tasks = [
             asyncio.create_task(channel_loop(
                 s, args.url, args.model, tok, i, arrivals[i],
-                args.duration, args.gap, args.mode, args.warmup_turns
+                args.duration, args.gap_min, args.gap_max, args.mode, args.warmup_turns
             ))
             for i in range(args.channels)
         ]
