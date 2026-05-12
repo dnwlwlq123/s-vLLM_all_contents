@@ -1,0 +1,53 @@
+{
+  "_comment": "도메인별 intent 라벨. 프롬프팅팀이 직접 수정 가능. 변경 후 gateway 재시작하면 반영됨.",
+  "shared": [
+    "agent",
+    "end"
+  ],
+  "finance": [
+    "stay",
+    "pass",
+    "fail",
+    "add_stock",
+    "add_ipo",
+    "change_account",
+    "retry",
+    "transfer",
+    "miss",
+    "match",
+    "agree",
+    "faq_in_scope",
+    "faq_out_scope",
+    "주식",
+    "공모주",
+    "기타"
+  ],
+  "homeshopping": [
+    "agt",
+    "cfm_ccl",
+    "cfm_exg",
+    "cfm_rtn",
+    "claim",
+    "clarify",
+    "clm",
+    "dtl",
+    "end",
+    "faq",
+    "go_dtl",
+    "go_ord",
+    "go_pay",
+    "main",
+    "mod",
+    "modify",
+    "ok_mod",
+    "ord",
+    "order_stay",
+    "pay_s",
+    "s_cur",
+    "s_kw",
+    "shipping",
+    "srch",
+    "stay",
+    "up_add"
+  ]
+}

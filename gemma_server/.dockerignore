@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.pyo
+*.bak
+*.bak.*
+logs/
+venv/
+venv_*/
+.env
+.git
+.gitignore
+nohup.out
+*.log
+*.orig
+models/

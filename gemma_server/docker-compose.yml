@@ -1,0 +1,20 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gemma4-gateway
+    network_mode: host
+    env_file:
+      - .env
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+# NOTE: vLLM inference 서버는 이 compose 에 포함 안 됨.
+# GPU driver/CUDA/모델 weight 가 호스트에 있고 자주 args 튜닝하므로,
+# 호스트에서 `bash start_vllm.sh` 로 별도 기동.
+# Gateway 컨테이너는 network_mode: host 로 localhost:8000 (vLLM) 에 접속.

@@ -1,0 +1,98 @@
+###############################################
+### request-rate=2 (avg interval=0.50s
+###############################################
+Successful requests:                     50        
+Failed requests:                         0         
+Benchmark duration (s):                  45.61     
+Request throughput (req/s):              1.10      
+Output token throughput (tok/s):         109.61    
+Mean TTFT (ms):                          5137.27   
+Median TTFT (ms):                        4528.83   
+P50 TTFT (ms):                           4528.83   
+P95 TTFT (ms):                           11805.50  
+P99 TTFT (ms):                           12766.57  
+Mean TPOT (ms):                          141.46    
+Median TPOT (ms):                        144.16    
+P50 TPOT (ms):                           144.16    
+P95 TPOT (ms):                           168.49    
+P99 TPOT (ms):                           181.10    
+Mean ITL (ms):                           140.05    
+Median ITL (ms):                         28.48     
+P50 ITL (ms):                            28.48     
+P95 ITL (ms):                            660.11    
+P99 ITL (ms):                            1269.78   
+
+###############################################
+### request-rate=1 (avg interval=1.00s
+###############################################
+Successful requests:                     50        
+Failed requests:                         0         
+Benchmark duration (s):                  54.29     
+Request throughput (req/s):              0.92      
+Output token throughput (tok/s):         92.09     
+Mean TTFT (ms):                          1091.31   
+Median TTFT (ms):                        827.76    
+P50 TTFT (ms):                           827.76    
+P95 TTFT (ms):                           2397.00   
+P99 TTFT (ms):                           2611.26   
+Mean TPOT (ms):                          45.22     
+Median TPOT (ms):                        43.15     
+P50 TPOT (ms):                           43.15     
+P95 TPOT (ms):                           81.24     
+P99 TPOT (ms):                           86.40     
+Mean ITL (ms):                           44.82     
+Median ITL (ms):                         19.16     
+P50 ITL (ms):                            19.16     
+P95 ITL (ms):                            57.23     
+P99 ITL (ms):                            638.12    
+
+###############################################
+### request-rate=0.67 (avg interval=1.49s
+###############################################
+Successful requests:                     50        
+Failed requests:                         0         
+Benchmark duration (s):                  78.12     
+Request throughput (req/s):              0.64      
+Output token throughput (tok/s):         64.00     
+Mean TTFT (ms):                          958.10    
+Median TTFT (ms):                        750.61    
+P50 TTFT (ms):                           750.61    
+P95 TTFT (ms):                           2079.05   
+P99 TTFT (ms):                           2433.11   
+Mean TPOT (ms):                          30.40     
+Median TPOT (ms):                        29.59     
+P50 TPOT (ms):                           29.59     
+P95 TPOT (ms):                           49.39     
+P99 TPOT (ms):                           59.22     
+Mean ITL (ms):                           30.17     
+Median ITL (ms):                         16.99     
+P50 ITL (ms):                            16.99     
+P95 ITL (ms):                            21.18     
+P99 ITL (ms):                            611.67    
+
+===ALL DONE===
+기존 벤치 완료, 2초 간격 추가 실행
+###############################################
+### request-rate=0.5 (avg interval=2.00s)
+###############################################
+Successful requests:                     50        
+Failed requests:                         0         
+Benchmark duration (s):                  102.90    
+Request throughput (req/s):              0.49      
+Output token throughput (tok/s):         48.59     
+Mean TTFT (ms):                          926.72    
+Median TTFT (ms):                        755.57    
+P50 TTFT (ms):                           755.57    
+P95 TTFT (ms):                           1913.98   
+P99 TTFT (ms):                           2472.02   
+Mean TPOT (ms):                          23.18     
+Median TPOT (ms):                        22.35     
+P50 TPOT (ms):                           22.35     
+P95 TPOT (ms):                           36.41     
+P99 TPOT (ms):                           43.02     
+Mean ITL (ms):                           23.05     
+Median ITL (ms):                         16.22     
+P50 ITL (ms):                            16.22     
+P95 ITL (ms):                            19.07     
+P99 ITL (ms):                            598.01    
+===2s DONE===

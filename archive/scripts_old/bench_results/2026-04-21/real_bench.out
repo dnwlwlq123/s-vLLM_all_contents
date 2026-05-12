@@ -1,0 +1,68 @@
+Loading tokenizer...
+System prompt: 1675 tokens
+Target user msg: 6295 tokens
+
+=== 0.5s_텀 (rate=2.0, burstiness=1.0) ===
+arrival window: 20.3s
+  success=50/50 err=0
+  TTFT  mean=4559 p95=7024 p99=7454
+  ITL   mean=292.9 p95=464.2 p99=476.3
+  punct mean=10516 p95=16452
+  Total mean=13800 p95=21911 p99=25409
+  prompt~0tok completion~0tok
+
+=== 1.0s_텀 (rate=1.0, burstiness=1.0) ===
+arrival window: 40.7s
+  success=49/50 err=1
+  TTFT  mean=1361 p95=2801 p99=3122
+  ITL   mean=67.8 p95=193.1 p99=251.2
+  punct mean=2876 p95=6088
+  Total mean=3357 p95=7527 p99=8152
+  prompt~0tok completion~0tok
+
+=== 1.5s_텀 (rate=0.67, burstiness=1.0) ===
+arrival window: 60.7s
+  success=50/50 err=0
+  TTFT  mean=922 p95=1992 p99=2024
+  ITL   mean=48.7 p95=153.3 p99=172.0
+  punct mean=2019 p95=4753
+  Total mean=2349 p95=5136 p99=5236
+  prompt~0tok completion~0tok
+
+=== 2.0s_텀 (rate=0.5, burstiness=1.0) ===
+arrival window: 81.3s
+  success=49/50 err=1
+  TTFT  mean=833 p95=1390 p99=1737
+  ITL   mean=38.3 p95=102.0 p99=145.3
+  punct mean=1546 p95=3800
+  Total mean=1959 p95=4103 p99=4546
+  prompt~0tok completion~0tok
+
+=== peak_burst (rate=10, burstiness=0.5) ===
+arrival window: 3.9s
+  success=50/50 err=0
+  TTFT  mean=12397 p95=23126 p99=24219
+  ITL   mean=282.9 p95=470.5 p99=482.9
+  punct mean=18276 p95=25120
+  Total mean=21432 p95=25634 p99=25920
+  prompt~0tok completion~0tok
+
+=== surge_폭주 (rate=20, burstiness=0.3) ===
+arrival window: 2.2s
+  success=50/50 err=0
+  TTFT  mean=13419 p95=24515 p99=25709
+  ITL   mean=286.9 p95=475.0 p99=524.2
+  punct mean=19308 p95=26069
+  Total mean=22195 p95=26868 p99=27147
+  prompt~0tok completion~0tok
+ALL DONE
+=== 기존 6개 완료, burst 한국어 시작 Tue Apr 21 01:34:20 UTC 2026 ===
+SYS=1675 USER_PAD=6175
+=== BURST 완전동시 50 (Korean 8K) ===
+  success=50/50 err=0
+  TTFT  mean=15123 p95=26854 p99=29200
+  ITL   mean=213.5 p95=359.1 p99=369.6
+  punct mean=21566 p95=29269
+  Total mean=23852 p95=29642 p99=30092
+ALL DONE
+=== burst done Tue Apr 21 01:34:56 UTC 2026 ===

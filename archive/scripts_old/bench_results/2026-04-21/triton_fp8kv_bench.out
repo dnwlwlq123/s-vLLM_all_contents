@@ -1,0 +1,68 @@
+Loading tokenizer...
+System prompt: 1675 tokens
+Target user msg: 6295 tokens
+
+=== 0.5s_텀 (rate=2.0, burstiness=1.0) ===
+arrival window: 20.3s
+  success=50/50 err=0
+  TTFT  mean=22900 p95=31196 p99=31691
+  ITL   mean=674.2 p95=1417.4 p99=1852.2
+  punct mean=42239 p95=51595
+  Total mean=43349 p95=52714 p99=53110
+  prompt~0tok completion~0tok
+
+=== 1.0s_텀 (rate=1.0, burstiness=1.0) ===
+arrival window: 40.7s
+  success=50/50 err=0
+  TTFT  mean=7544 p95=11863 p99=11961
+  ITL   mean=770.9 p95=1644.2 p99=1969.4
+  punct mean=29112 p95=43187
+  Total mean=31617 p95=50099 p99=50455
+  prompt~0tok completion~0tok
+
+=== 1.5s_텀 (rate=0.67, burstiness=1.0) ===
+arrival window: 60.7s
+  success=49/50 err=1
+  TTFT  mean=3391 p95=6809 p99=7984
+  ITL   mean=159.8 p95=552.7 p99=666.8
+  punct mean=7534 p95=17602
+  Total mean=8192 p95=18457 p99=19056
+  prompt~0tok completion~0tok
+
+=== 2.0s_텀 (rate=0.5, burstiness=1.0) ===
+arrival window: 81.3s
+  success=50/50 err=0
+  TTFT  mean=2347 p95=5398 p99=5831
+  ITL   mean=101.6 p95=311.1 p99=400.9
+  punct mean=4822 p95=11168
+  Total mean=5427 p95=12754 p99=15125
+  prompt~0tok completion~0tok
+
+=== peak_burst (rate=10, burstiness=0.5) ===
+arrival window: 3.9s
+  success=50/50 err=0
+  TTFT  mean=25826 p95=45492 p99=46427
+  ITL   mean=792.1 p95=1660.2 p99=1993.6
+  punct mean=48564 p95=50575
+  Total mean=49263 p95=51194 p99=51750
+  prompt~0tok completion~0tok
+
+=== surge_폭주 (rate=20, burstiness=0.3) ===
+arrival window: 2.2s
+  success=50/50 err=0
+  TTFT  mean=25953 p95=45487 p99=47272
+  ITL   mean=759.4 p95=1585.5 p99=1773.8
+  punct mean=48789 p95=49970
+  Total mean=49544 p95=50717 p99=50880
+  prompt~0tok completion~0tok
+ALL DONE
+=== 기존 6개 완료, burst 한국어 시작 Tue Apr 21 02:14:26 UTC 2026 ===
+SYS=1675 USER_PAD=6175
+=== BURST 완전동시 50 (Korean 8K) ===
+  success=50/50 err=0
+  TTFT  mean=27904 p95=47371 p99=50037
+  ITL   mean=570.8 p95=1110.6 p99=1460.6
+  punct mean=50212 p95=50981
+  Total mean=50898 p95=51821 p99=51904
+ALL DONE
+=== burst done Tue Apr 21 02:15:24 UTC 2026 ===

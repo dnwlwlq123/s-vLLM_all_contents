@@ -1,0 +1,2 @@
+BEFORE 버전 (실제):
+vllm-0.19.2rc1.dev16+g898beca5a

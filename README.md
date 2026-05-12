@@ -1,28 +1,24 @@
-# s-vLLM_all_contents
+# vLLM serving experiments
 
-vLLM 콜봇 서빙 인프라 코드/스크립트 모음.
+Personal collection of vLLM serving / gateway / benchmark scripts and patches
+collected while exploring large MoE + dense FP8 models on H100 / Blackwell GPUs.
 
-## 구조
+## Layout
 
-```
-vllm_pipeline/        — 5090 dev 환경 (게이트웨이 + 서빙 컨트롤러)
-  vllm_gateway/       — OpenAI 호환 게이트웨이 (intent/answer 라우팅)
-  vllm_serving/       — vLLM 프로세스 매니지먼트 + S3 모델 캐시
+| Dir              | Purpose                                                                 |
+|------------------|-------------------------------------------------------------------------|
+| `gemma_server/`  | FastAPI gateway + vLLM startup for Gemma 4 31B-it (TRITON + xgrammar)   |
+| `scripts/`       | vLLM startup scripts for Qwen3.6 / Gemma 4 + benchmark harness          |
+| `gateway/`       | OpenAI-compatible vLLM gateway (streaming TTFT/ITL logs, thinking off)  |
+| `trtllm_fixes/`  | LD_PRELOAD shim for the TRT-LLM cubin rename bug                        |
+| `vllm_patches/`  | FA4 + FP8 KV gating patches                                             |
+| `results/`       | Sweep result JSONs (poisson + burst across channel counts)              |
+| `docs/`          | Notes                                                                   |
+| `archive/`       | Older setup snapshots                                                   |
 
-vllm_activate/        — RunPod / 실서빙 환경 스크립트
-  gemma4/             — Gemma4-31B-it 띄우는 변종 5종
-                         (FA3+FP8KV / FA3 v1.9.1 / FP8KV test / TurboQuant / 기본 FA4)
-                       + Gemma4_server (가벼운 게이트웨이)
-  qwen3.5/            — Qwen3.5-35B-A3B (MoE) 띄우는 변종
-                         (기본 / v2 / TurboQuant / robust setup)
-  bench/              — 콜봇 latency/burst 벤치마크 스크립트 (real/single/burst)
-  trtllm_fixes/       — FlashInfer MoE FP8 cubin rename 버그 LD_PRELOAD shim
-```
+## Notes
 
-## 제외된 것
-
-- 모델 weights (`/workspace/models/`)
-- venv (`venv_gemma4`, `venv_gemma4_v19_1` 등)
-- 벤치 결과 출력
-- 컴파일 산출물 (.so)
-- IP/포트/k8s manifest
+- Targets vLLM `0.20.0` (FA3 / FA4 + FP8 KV combinations).
+- Gateway uses HTTP/2 + keepalive to a local vLLM (port 8000 by default).
+- Bench harness drives a 3-step conversation workflow per turn to measure
+  TTFT / ITL / first-punctuation latency under sustained load.
