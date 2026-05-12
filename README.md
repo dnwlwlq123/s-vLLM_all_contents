@@ -7,7 +7,7 @@ collected while exploring large MoE + dense FP8 models on H100 / Blackwell GPUs.
 
 | Dir              | Purpose                                                                 |
 |------------------|-------------------------------------------------------------------------|
-| `gemma_server/`  | FastAPI gateway + vLLM startup for Gemma 4 31B-it (TRITON + xgrammar)   |
+| `gemma_server/`  | FastAPI gateway + vLLM startup for Gemma 4 31B-it (FA4 + TRITON + xgrammar)   |
 | `scripts/`       | vLLM startup scripts for Qwen3.6 / Gemma 4 + benchmark harness          |
 | `gateway/`       | OpenAI-compatible vLLM gateway (streaming TTFT/ITL logs, thinking off)  |
 | `trtllm_fixes/`  | LD_PRELOAD shim for the TRT-LLM cubin rename bug                        |
